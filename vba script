@@ -1,0 +1,140 @@
+
+Sub CombineData()
+    ' 1. Loop through every worksheet and select the state contents.
+    ' 2. Copy the state contents and paste it into the Combined_Data tab
+    ' Add a sheet named "Combined Data"
+    Sheets.Add.Name = "Combined_Data"
+    'move created sheet to be first sheet
+    Sheets("Combined_Data").Move Before:=Sheets(1)
+    ' Specify the location of the combined sheet
+    Set combined_sheet = Worksheets("Combined_Data")
+
+    ' Loop through all sheets
+    For Each ws In Worksheets
+
+        ' Find the last row of the combined sheet after each paste
+        ' Add 1 to get first empty row
+        lastRow = combined_sheet.Cells(Rows.Count, "A").End(xlUp).Row + 1
+
+        ' Find the last row of each worksheet
+        ' Subtract one to return the number of rows without header
+        lastRowState = ws.Cells(Rows.Count, "A").End(xlUp).Row - 1
+
+        ' Copy the contents of each state sheet into the combined sheet
+        combined_sheet.Range("A" & lastRow & ":Z" & ((lastRowState - 1) + lastRow)).Value = ws.Range("A2:Z" & (lastRowState + 1)).Value
+
+    Next ws
+
+    ' Copy the headers from sheet 1
+    combined_sheet.Range("A1:Z1").Value = Sheets(2).Range("A1:Z1").Value
+    
+    ' Autofit to display data
+    combined_sheet.Columns("A:Z").AutoFit
+End Sub
+
+
+Sub Ticker()
+
+    'set ticker and vol with variable and give value to volume
+    Dim Ticker As String
+    Dim Total_Stock_Volume As Double
+    Total_Stock_Volume = 0
+    Dim Summary_Table_Row As Double
+    Summary_Table_Row = 2
+    
+    'Loop All Ticker and setting last row
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    For i = 2 To lastRow
+    
+        'check to change if not the same ticker anymore
+        If (Cells(i + 1, 1).Value <> Cells(i, 1).Value) Then
+        
+            'Give value Ticker and Vol_Total
+            Ticker = Cells(i, 1).Value
+            Total_Stock_Volume = Total_Stock_Volume + Cells(i, 7).Value
+            
+            'locate where to place the value
+            Range("J" & Summary_Table_Row).Value = Ticker
+            Range("M" & Summary_Table_Row).Value = Total_Stock_Volume
+
+            Summary_Table_Row = Summary_Table_Row + 1
+            
+            'Reset sum for each new value
+            Total_Stock_Volume = 0
+        Else
+            'Continue Adding
+            Total_Stock_Volume = Total_Stock_Volume + Cells(i, 7).Value
+        End If
+    Next i
+
+End Sub
+
+Sub ChangeOPENvsCLOSE()
+
+    'set ticker and vol with variable and give value to volume
+    Dim Ticker As String
+    Dim YearlyChange As Double
+    Dim PercentChange As Double
+    Dim OpeningTotal As Double
+    YearlyChange = 0
+    OpeningTotal = 0
+    Dim Summary_Table_Row As Double
+    Summary_Table_Row = 2
+    
+    'Loop All Ticker and setting last row
+    Dim lastRow As Double
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    For i = 2 To lastRow
+    
+        'check to change if not the same ticker anymore and if data are zero then populate zero
+        If (Cells(i + 1, 1).Value <> Cells(i, 1).Value) Then
+                If (Cells(i, 6).Value + Cells(i, 3).Value = 0) Then
+                    Range("K" & Summary_Table_Row).Value = 0
+                    Range("L" & Summary_Table_Row).Value = 0
+                    
+                'Give value Ticker and Vol_Total if they are not zero value
+                Else
+                    YearlyChange = YearlyChange + Cells(i, 6).Value - Cells(i, 3).Value
+                    OpeningTotal = OpeningTotal + Cells(i, 3).Value
+                    PercentChange = YearlyChange / OpeningTotal
+                    'locate where to place the value
+                    Range("K" & Summary_Table_Row).Value = YearlyChange
+                    Range("L" & Summary_Table_Row).Value = PercentChange
+                    Summary_Table_Row = Summary_Table_Row + 1
+                
+                'Reset sum for each new value
+                    YearlyChange = 0
+                    PercentChange = 0
+                    OpeningTotal = 0
+                End If
+                
+        ElseIf (Cells(i, 6).Value + Cells(i, 3).Value <> 0) Then
+            YearlyChange = YearlyChange + Cells(i, 6).Value - Cells(i, 3).Value
+            OpeningTotal = OpeningTotal + Cells(i, 3).Value
+            PercentChange = YearlyChange / OpeningTotal
+            'locate where to place the value
+'            Range("K" & Summary_Table_Row).Value = YearlyChange
+'            Range("L" & Summary_Table_Row).Value = PercentChange
+            
+            
+        Else
+           Range("K" & Summary_Table_Row).Value = 0
+           Range("L" & Summary_Table_Row).Value = 0
+                
+        End If
+
+         'If value greater than 0 then green if not red
+        If (Cells(Summary_Table_Row, 11) > 0) Then
+                Cells(Summary_Table_Row, 11).Interior.ColorIndex = 4
+            
+          'otherwise color it red
+            ElseIf (Cells(Summary_Table_Row, 11) < 0) Then
+                Cells(Summary_Table_Row, 11).Interior.ColorIndex = 3
+            Else
+                Cells(Summary_Table_Row, 11).Interior.ColorIndex = xlNone
+            
+        End If
+    Next i
+    
+End Sub
+
